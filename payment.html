@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Sai Ganesh Textiles</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <nav>
+            <div class="logo">
+                <h1><span class="sai">Sai</span> <span class="ganesh">Ganesh</span> <span class="textiles">Textiles</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Back to Home</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Payment Section -->
+    <section class="payment-page">
+        <div class="payment-container">
+            <h2>Complete Your Payment</h2>
+            <div class="order-summary">
+                <h3>Order Summary</h3>
+                <div id="order-items"></div>
+                <div class="order-total">
+                    <h4>Total Amount: ₹<span id="order-total">0</span></h4>
+                </div>
+            </div>
+
+            <div class="payment-options">
+                <h3>Select Payment Method</h3>
+                <div class="payment-methods">
+                    <div class="payment-method" data-method="upi">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>UPI Payment</span>
+                    </div>
+                    <div class="payment-method" data-method="card">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Credit/Debit Card</span>
+                    </div>
+                    <div class="payment-method" data-method="netbanking">
+                        <i class="fas fa-university"></i>
+                        <span>Net Banking</span>
+                    </div>
+                    <div class="payment-method" data-method="cod">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Cash on Delivery</span>
+                    </div>
+                </div>
+                <div id="payment-details" class="payment-details">
+                    <!-- Payment form will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="payment.js"></script>
+</body>
+</html> 
