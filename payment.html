@@ -24,6 +24,8 @@
     <section class="payment-page">
         <div class="payment-container">
             <h2>Complete Your Payment</h2>
+            
+            <!-- Order Summary -->
             <div class="order-summary">
                 <h3>Order Summary</h3>
                 <div id="order-items"></div>
@@ -32,6 +34,20 @@
                 </div>
             </div>
 
+            <!-- Shipping Address -->
+            <div class="shipping-address">
+                <h3>Shipping Address</h3>
+                <form id="address-form">
+                    <input type="text" id="fullname" placeholder="Full Name" required>
+                    <input type="text" id="address" placeholder="Street Address" required>
+                    <input type="text" id="city" placeholder="City" required>
+                    <input type="text" id="state" placeholder="State" required>
+                    <input type="text" id="pincode" placeholder="PIN Code" required>
+                    <input type="tel" id="phone" placeholder="Phone Number" required>
+                </form>
+            </div>
+
+            <!-- Payment Methods -->
             <div class="payment-options">
                 <h3>Select Payment Method</h3>
                 <div class="payment-methods">
@@ -52,13 +68,225 @@
                         <span>Cash on Delivery</span>
                     </div>
                 </div>
-                <div id="payment-details" class="payment-details">
-                    <!-- Payment form will be dynamically inserted here -->
-                </div>
+
+                <!-- Payment Details (dynamically updated) -->
+                <div id="payment-details" class="payment-details"></div>
             </div>
         </div>
     </section>
 
-    <script src="payment.js"></script>
+    <script>
+        // Get cart data from localStorage
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const orderItems = document.getElementById('order-items');
+        const orderTotal = document.getElementById('order-total');
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        const paymentDetails = document.getElementById('payment-details');
+
+        // Display order items
+        function displayOrderItems() {
+            let total = 0;
+            orderItems.innerHTML = '';
+
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+
+                orderItems.innerHTML += `
+                    <div class="order-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div class="order-item-details">
+                            <h4>${item.name}</h4>
+                            <p>₹${item.price} × ${item.quantity}</p>
+                        </div>
+                        <div class="item-total">₹${itemTotal}</div>
+                    </div>
+                `;
+            });
+
+            orderTotal.textContent = total;
+        }
+
+        // Payment method selection
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', () => {
+                paymentMethods.forEach(m => m.classList.remove('selected'));
+                method.classList.add('selected');
+                showPaymentForm(method.dataset.method);
+            });
+        });
+
+        // Show payment form based on selected method
+        function showPaymentForm(paymentType) {
+            switch(paymentType) {
+                case 'upi':
+                    paymentDetails.innerHTML = `
+                        <div class="payment-form active">
+                            <div class="upi-options">
+                                <div class="upi-option" onclick="handleUPIPayment('gpay')">
+                                    <img src="gpay.png" alt="Google Pay">
+                                    <span>Google Pay</span>
+                                </div>
+                                <div class="upi-option" onclick="handleUPIPayment('phonepe')">
+                                    <img src="phonepe.png" alt="PhonePe">
+                                    <span>PhonePe</span>
+                                </div>
+                                <div class="upi-option" onclick="handleUPIPayment('paytm')">
+                                    <img src="paytm.png" alt="Paytm">
+                                    <span>Paytm</span>
+                                </div>
+                            </div>
+                            <input type="text" id="upi-id" placeholder="Enter UPI ID" required>
+                            <button class="payment-button" onclick="processPayment('upi')">Pay Now</button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'card':
+                    paymentDetails.innerHTML = `
+                        <div class="payment-form active">
+                            <input type="text" id="card-number" placeholder="Card Number" required>
+                            <div class="card-row">
+                                <input type="text" id="card-expiry" placeholder="MM/YY" required>
+                                <input type="password" id="card-cvv" placeholder="CVV" required>
+                            </div>
+                            <input type="text" id="card-name" placeholder="Card Holder Name" required>
+                            <button class="payment-button" onclick="processPayment('card')">Pay Now</button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'netbanking':
+                    paymentDetails.innerHTML = `
+                        <div class="payment-form active">
+                            <select id="bank-select" required>
+                                <option value="">Select Bank</option>
+                                <option value="sbi">State Bank of India</option>
+                                <option value="hdfc">HDFC Bank</option>
+                                <option value="icici">ICICI Bank</option>
+                                <option value="axis">Axis Bank</option>
+                            </select>
+                            <button class="payment-button" onclick="processPayment('netbanking')">Continue to Net Banking</button>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'cod':
+                    paymentDetails.innerHTML = `
+                        <div class="payment-form active">
+                            <p>Cash on Delivery charges: ₹49</p>
+                            <button class="payment-button" onclick="processPayment('cod')">Place Order</button>
+                        </div>
+                    `;
+                    break;
+            }
+        }
+
+        // Process payment
+        function processPayment(method) {
+            const addressData = {
+                fullname: document.getElementById('fullname').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                pincode: document.getElementById('pincode').value,
+                phone: document.getElementById('phone').value
+            };
+
+            // Validate address
+            if (!validateAddress(addressData)) {
+                alert('Please fill in all address fields');
+                return;
+            }
+
+            // Get payment details based on method
+            const paymentData = getPaymentData(method);
+            if (!paymentData) return;
+
+            // Create order object
+            const order = {
+                items: cart,
+                total: parseFloat(orderTotal.textContent),
+                address: addressData,
+                payment: {
+                    method: method,
+                    details: paymentData
+                }
+            };
+
+            // Send to server
+            fetch('/api/process-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(order)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Order placed successfully!');
+                    localStorage.removeItem('cart');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Payment failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Payment failed. Please try again.');
+            });
+        }
+
+        // Validate address fields
+        function validateAddress(address) {
+            return Object.values(address).every(value => value.trim() !== '');
+        }
+
+        // Get payment details based on method
+        function getPaymentData(method) {
+            switch(method) {
+                case 'upi':
+                    const upiId = document.getElementById('upi-id').value;
+                    if (!upiId) {
+                        alert('Please enter UPI ID');
+                        return null;
+                    }
+                    return { upiId };
+
+                case 'card':
+                    const cardNumber = document.getElementById('card-number').value;
+                    const cardExpiry = document.getElementById('card-expiry').value;
+                    const cardCvv = document.getElementById('card-cvv').value;
+                    const cardName = document.getElementById('card-name').value;
+                    
+                    if (!cardNumber || !cardExpiry || !cardCvv || !cardName) {
+                        alert('Please fill in all card details');
+                        return null;
+                    }
+                    return { cardNumber, cardExpiry, cardCvv, cardName };
+
+                case 'netbanking':
+                    const bank = document.getElementById('bank-select').value;
+                    if (!bank) {
+                        alert('Please select a bank');
+                        return null;
+                    }
+                    return { bank };
+
+                case 'cod':
+                    return { codCharge: 49 };
+            }
+        }
+
+        // Handle UPI app selection
+        function handleUPIPayment(app) {
+            // Here you would typically integrate with the UPI app
+            alert(`Redirecting to ${app}...`);
+        }
+
+        // Initialize page
+        displayOrderItems();
+    </script>
 </body>
 </html> 

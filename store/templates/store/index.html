@@ -1,0 +1,40 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Welcome to Sai Ganesh Textiles</h1>
+            <p>Discover Premium Quality Fabrics & Clothing</p>
+            <a href="#products" class="cta-button">Shop Now</a>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <h2>Our Products</h2>
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-actions">
+                    <button class="wishlist-button" data-product-id="{{ product.id }}">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                <h3>{{ product.name }}</h3>
+                <p>₹{{ product.price }}</p>
+                <button class="buy-button" data-product-id="{{ product.id }}">Add to Cart</button>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Rest of your sections... -->
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/cart.js' %}"></script>
+<script src="{% static 'js/wishlist.js' %}"></script>
+{% endblock %} 
